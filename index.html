@@ -249,10 +249,21 @@
   </div>
 </body>
 <script>
+  // 获取URL参数中的设备IP和端口
+  function getUrlParameter(name) {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get(name);
+  }
+
+  // 获取设备IP和端口
+  const deviceIp = getUrlParameter('device_ip') || '192.168.4.1';  // 默认AP IP
+  const devicePort = getUrlParameter('device_port') || '88';
+  const deviceBaseUrl = `http://${deviceIp}:${devicePort}`;
+
   var Running = document.getElementById("Running"); //访问 HTML 元素
   //页面加载完毕后立刻执行的操作
   window.onload = function () {
-    fetch("/Now").then((response) => {    //基本的fetch请求 http请求
+    fetch(`${deviceBaseUrl}/Now`).then((response) => {    //基本的fetch请求 http请求
       if (response.status == 200) {       //获取http请求状态 200 请求成功
         response.json().then(function (data) {  //json数据
           Running.innerHTML =
@@ -295,7 +306,7 @@
     } else {
       var fileObj = fileInput[0];                             // js 获取文件对象
       xhr = new XMLHttpRequest();                             // XMLHttpRequest 对象
-      xhr.open("post", "/upload", true);                      // post方式，/upload 为请求url，true 该参数规定请求是否异步处理。
+      xhr.open("post", `${deviceBaseUrl}/upload`, true);                      // post方式，/upload 为请求url，true 该参数规定请求是否异步处理。
       xhr.onload = uploadComplete;                            // 请求完成
       xhr.onerror = uploadFailed;                             // 请求失败
       xhr.upload.onprogress = progressFunction;               //【上传进度调用方法实现】
@@ -352,7 +363,7 @@
       message.innerHTML = "File uploaded successfully<br>" + xhr.responseText + "<br>Waiting for the device to restart<br>waiting"; //显示请求成功 <br> 换行
       message.style.color = "#2C9678";      //设置颜色
       timer = setInterval(function () {             //定时函数，页面会每隔1000毫秒正常执行一次 1S请求一次 Now
-        fetch("/Now").then((response) => {
+        fetch(`${deviceBaseUrl}/Now`).then((response) => {
           if (response.status == 200) {     //请求成功
             location.assign(location.href); //获取或者设置整个URL 跳转网页 重定向页面
             //location.replace();
