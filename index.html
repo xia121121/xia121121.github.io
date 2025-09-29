@@ -256,8 +256,9 @@
   }
 
   // 获取设备IP和端口
-  const deviceIp = getUrlParameter('device_ip') || '10.10.10.1';  // 使用您的实际设备IP
+  const deviceIp = getUrlParameter('device_ip') || '10.10.10.1';
   const devicePort = getUrlParameter('device_port') || '88';
+  // 使用HTTP协议访问设备API
   const deviceBaseUrl = `http://${deviceIp}:${devicePort}`;
 
   var Running = document.getElementById("Running");
