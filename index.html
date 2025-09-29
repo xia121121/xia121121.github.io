@@ -252,9 +252,12 @@
   var Running = document.getElementById("Running"); //访问 HTML 元素
   //页面加载完毕后立刻执行的操作
   window.onload = function () {
+    console.log("window.onload");
     fetch("/Now").then((response) => {    //基本的fetch请求 http请求
+      console.log("fetch/Now");
       if (response.status == 200) {       //获取http请求状态 200 请求成功
         response.json().then(function (data) {  //json数据
+          console.log("response.json");
           Running.innerHTML =
             "Type: " +
             data.OTAsubtype +             //解析json数据
@@ -269,6 +272,7 @@
         });
       } else {                            //http请求失败
         Running.innerHTML = "status: " + response.status;
+        console.log("response.status");
       }
     });
   };
@@ -385,3 +389,4 @@
 </script>
 
 </html>
+
