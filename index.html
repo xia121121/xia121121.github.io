@@ -1,340 +1,121 @@
-<!DOCTYPE html>
-<html lang="en">
+// 获取URL参数中的设备IP和端口
+function getUrlParameter(name) {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get(name);
+}
 
-<head>
-  <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport"
-    content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
-  <title>Johnson Fitness</title>
-</head>
+// 获取设备IP和端口
+const deviceIp = getUrlParameter('device_ip') || '10.10.10.1';
+const devicePort = getUrlParameter('device_port') || '88';
 
-<!-- 
-  style样式主要分为三种 内联样式、内部样式、外部样式 ，这里使用的是内联样式
-  样式css主要对html进行美化，css的机制主要通过过滤器来实现对指定的对象对html进行美化 
-  主要的格式为：选择器{样式声明;样式声明…}
-  以下使用到几种选择器 元素选择器、类选择器、ID选择器
--->
-<style>
-  /* 元素选择器 设置主体的样式 不同的选择器修饰相同的属性时候 外部设置影响不到局部设置，eg body的字体没法对.bigTitle类中字体产生影响*/
-  body {
-    background-color: #f7f4ed;
-    /* body 中背景颜色 */
-    color: #132c33;
-    /* body 中指定文本颜色 */
-    height: 100%;
-    /* body 占据的高 */
-    width: 100%;
-    /* body 占据的宽 */
-    padding: 0;
-    /* body 占据的内边距0 */
-    margin: 0;
-    /* body 占据的外边距0 */
-    border: 0;
-    /* body 占据的边框0 */
-    font-size: 16px;
-    /* body 中的字体 */
-  }
+// 重要：构建完整的HTTP URL，但添加错误处理
+function getDeviceUrl(path) {
+    return `http://${deviceIp}:${devicePort}${path}`;
+}
 
-  /* 类选择器 对html中 divborder类进行美化样式 */
-  .divborder {
-    width: 100%;
-    height: 100%;
-    background-color: #f7f4ed;
-    text-align: center;
-    /* divborder 类中字体居中 */
-    position: relative;
-    /* divborder 类的定位方式relative 相对定位 */
-    padding: 30px 0;
-    /* divborder 类上下边距30px 左右0px */
-  }
+var Running = document.getElementById("Running");
 
-  .titleName {
-    font-weight: 700;
-    margin-bottom: 20px;
-  }
-
-  .bigTitle {
-    font-size: 25px;
-  }
-
-  .smallTitle {
-    font-size: 20px;
-  }
-
-  table {
-    width: 300px;
-    margin: 20px auto;
-    /* table 元素上下边距20px 左右自适应 */
-  }
-
-  /* table 元素 tr元素定义表格行，th元素定义表头，td元素定义表格单元格。*/
-  table tr {
-    margin: 10px 0;
-  }
-
-  button {
-    width: 100%;
-    height: 45px;
-    border: none;
-    border-radius: 10px;
-    /* button 的边框圆角 */
-    padding: 0;
-    font-size: 16px;
-    font-weight: 700;
-  }
-
-  /*伪类选择器  :link 未访问的链接
-              :visited 已访问的链接
-              :hover 鼠标悬浮到连接上，即移动在连接上
-              :active 选定的链接，被激活 
-  */
-  /* 边框样式值 none:默认无边框
-              dotted:定义一个点线框
-              dashed:定义一个虚线框
-              solid :定义实现边界
-              double:定义两个边界。两个边界的宽度和border-width的值相同
-              groove:定义3D沟槽边界。效果取决于边界的颜色值
-              ridge :定义3D 脊边界。效果取决于边界的颜色值
-              inset :定义一个3D的嵌入边框。效果取决于边界的颜色值
-              outset:定义一个3D突出边框。效果取决于边界的颜色值
-              hidden:隐藏边框 
-  */
-  button:active {
-    border: 0.0625rem solid #f7f4ed;
-    /* button  宽0.0625rem 实线边框 颜色 #f7f4ed*/
-  }
-
-  /* ID选择器 */
-  #upload {
-    color: #f7f4ed;
-    border-radius: 99px;
-    background-color: #2c9678;
-  }
-
-  #Stop {
-    color: #f7f4ed;
-    border-radius: 99px;
-    background-color: #ed5126;
-  }
-
-  #fileTd {
-    width: 200px;
-    height: 80px;
-    position: relative;
-  }
-
-  #newfile {
-    position: absolute;
-    z-index: 1;
-    /* newfile中元素的堆叠顺序1 0在最前位置*/
-    opacity: 0;
-    /* newfile中不透明属性为0 0表示对象是完全透明的。*/
-    height: 45px;
-    border-radius: 99px;
-  }
-
-  #fileButton {
-    z-index: 0;
-    color: #f7f4ed;
-    border-radius: 99px;
-    background-color: #5779c3;
-  }
-
-  #prgp {
-    margin: 10px 0;
-    border: 0;
-    border: 2px solid #2c9678;
-    border-radius: 20px;
-    width: 300px;
-    height: 20px;
-  }
-
-  #prgp::-webkit-progress-bar {
-    background: #f7f4ed;
-    border-radius: 10px;
-  }
-
-  #prgp::-webkit-progress-value {
-    background: #2c9678;
-  }
-
-  /* 设置自适应屏幕 */
-  @media all and (min-width: 700px) {
-    body {
-      background-color: #21242d;
-      color: #132c33;
-    }
-
-    .divborder {
-      position: absolute;
-      left: 50%;
-      top: 10%;
-      left: 50%;
-      width: 500px;
-      height: 500px;
-      transform: translateX(-50%);
-      border-radius: 5%;
-      border: 2px solid #f7f4ed;
-      text-align: center;
-      padding: 50px 0;
-    }
-
-    .titleName {
-      display: flex;
-      justify-content: center;
-      word-spacing: 4px;
-    }
-
-    .bigTitle {
-      font-size: 22px;
-      margin-right: 8px;
-    }
-
-    .smallTitle {
-      font-size: 22px;
-    }
-
-    table {
-      width: 350px;
-    }
-
-    #prgp {
-      width: 350px;
-    }
-  }
-</style>
-
-<body>
-  <div class="divborder">
-    <div class="titleName">
-      <div class="bigTitle">Johnson Fitness</div>
-      <div class="smallTitle"> Console Firmware update</div>
-    </div>
-    <hr />
-
-    <div style="margin-top: 10px;">
-      <span>Running partition:</span><br />
-      <span id="Running" style="color: #2c9678"></span>
-    </div>
-
-    <table class="fileWrap">
-      <tr>
-        <td id="fileTd" colspan="3">
-          <input id="newfile" type="file" accept=".bin" style="width: 100%" onchange="setpath()" />
-          <!-- accept=".bin" 接受的文件类型为bin文件，不支持其它类型文件-->
-          <label for="newfile">
-            <button id="fileButton" type="button">Choose a firmware</button>
-          </label>
-        </td>
-      </tr>
-      <tr>
-        <td colspan="2" style="width: 200px">
-          <button id="upload" type="button" onclick="upload()">Upload</button>
-        </td>
-        <td style="width: 100px">
-          <button id="Stop" type="button" onclick="StopUpload()">Stop</button>
-        </td>
-      </tr>
-    </table>
-    <progress id="prgp" value="0" max="100"></progress>
-    <div id="prg">progress: 0%</div>
-    <div id="time">0k/s</div>
-    <hr />
-    <div style="margin-top: 10px;">
-      <span>Response message:</span>
-      <br />
-      <span id="message"></span>
-    </div>
-  </div>
-</body>
-<script>
-  // 获取URL参数中的设备IP和端口
-  function getUrlParameter(name) {
-      const urlParams = new URLSearchParams(window.location.search);
-      return urlParams.get(name);
-  }
-
-  // 获取设备IP和端口
-  const deviceIp = getUrlParameter('device_ip') || '10.10.10.1';
-  const devicePort = getUrlParameter('device_port') || '88';
-  // 使用HTTP协议访问设备API
-  const deviceBaseUrl = ''; // 使用空字符串，让浏览器自动使用当前协议和域名
-
-
-  var Running = document.getElementById("Running");
-   console.log("111");
-  //页面加载完毕后立刻执行的操作
-  window.onload = function () {
-    console.log("Device base URL:", deviceBaseUrl);
-    fetch(`${deviceBaseUrl}/Now`).then((response) => {    // 修改这里
-      console.log("fetch/Now");
-      if (response.status == 200) {
-        response.json().then(function (data) {
-          console.log("response.json");
-          Running.innerHTML =
-            "Type: " +
-            data.OTAsubtype +
-            "<br>Offset: 0x" +
-            data.address.toString(16) +
-            "<br>Ver: " +
-            data.version +
-            "<br>Time: " +
-            data.date +
-            " " +
-            data.time;
+//页面加载完毕后立刻执行的操作
+window.onload = function () {
+    console.log("Device IP:", deviceIp, "Port:", devicePort);
+    console.log("Full URL:", getDeviceUrl('/Now'));
+    
+    // 使用完整的HTTP URL
+    fetch(getDeviceUrl('/Now'))
+        .then((response) => {
+            console.log("fetch/Now - Status:", response.status);
+            if (response.status == 200) {
+                return response.json().then(function (data) {
+                    console.log("response.json", data);
+                    Running.innerHTML =
+                        "Type: " +
+                        data.OTAsubtype +
+                        "<br>Offset: 0x" +
+                        data.address.toString(16) +
+                        "<br>Ver: " +
+                        data.version +
+                        "<br>Time: " +
+                        data.date + " " + data.time;
+                });
+            } else {
+                Running.innerHTML = "status: " + response.status;
+                console.log("HTTP Error:", response.status);
+                throw new Error(`HTTP ${response.status}`);
+            }
+        })
+        .catch(error => {
+            console.error("Fetch error:", error);
+            Running.innerHTML = "Connection failed: " + error.message;
+            
+            // 显示连接帮助信息
+            const message = document.getElementById("message");
+            message.innerHTML = `
+                <div style="color: #ED5126;">
+                    <strong>连接失败！请检查：</strong><br>
+                    1. 手机是否连接到ESP32的WiFi热点<br>
+                    2. ESP32 IP地址是否正确 (${deviceIp}:${devicePort})<br>
+                    3. ESP32是否正在运行Web服务器<br>
+                    4. 尝试使用本地测试（见下方说明）
+                </div>
+            `;
         });
-      } else {
-        Running.innerHTML = "status: " + response.status;
-        console.log("response.status");
-      }
-    });
-  };
+};
 
-  //选择文件
-  function setpath() {
+//选择文件
+function setpath() {
     var default_path = document.getElementById("newfile").files[0].name;
     document.getElementById("fileButton").innerHTML = default_path;
-  }
+}
 
-  var xhr;
-  var ot;
-  var oloaded;
-  
-  //上传文件方法
-  function upload() {
+var xhr;
+var ot;
+var oloaded;
+
+//上传文件方法
+function upload() {
     var fileInput = document.getElementById("newfile").files;
     var message = document.getElementById("message");
     message.innerHTML = "";
+    
     if (fileInput.length <= 0) {
-      message.innerHTML = "Unselected file!";
-      message.style.color = "#ED5126";
-    } else if (fileInput[0].size > 3584 * 1024) {
-      message.innerHTML = "The file size must be less than 1000KB!";
-      message.style.color = "#ED5126";
-    } else {
-      var fileObj = fileInput[0];
-      xhr = new XMLHttpRequest();
-      xhr.open("post", `${deviceBaseUrl}/upload`, true);  // 修改这里
-      xhr.onload = uploadComplete;
-      xhr.onerror = uploadFailed;
-      xhr.upload.onprogress = progressFunction;
-      xhr.upload.onloadstart = function () {
+        message.innerHTML = "Unselected file!";
+        message.style.color = "#ED5126";
+        return;
+    }
+    
+    if (fileInput[0].size > 3584 * 1024) {
+        message.innerHTML = "The file size must be less than 1000KB!";
+        message.style.color = "#ED5126";
+        return;
+    }
+    
+    var fileObj = fileInput[0];
+    xhr = new XMLHttpRequest();
+    
+    // 使用完整的HTTP URL
+    xhr.open("POST", getDeviceUrl('/upload'), true);
+    xhr.onload = uploadComplete;
+    xhr.onerror = uploadFailed;
+    xhr.upload.onprogress = progressFunction;
+    xhr.upload.onloadstart = function () {
         ot = new Date().getTime();
         oloaded = 0;
-      };
-      xhr.send(fileObj);
-    }
-  }
+    };
+    
+    message.innerHTML = "开始上传...";
+    message.style.color = "#2C9678";
+    xhr.send(fileObj);
+}
 
-  //上传进度实现方法
-  function progressFunction(evt) {
+//上传进度实现方法
+function progressFunction(evt) {
     var progressBar = document.getElementById("prgp");
     var percentageDiv = document.getElementById("prg");
+    
     if (evt.lengthComputable) {
-      progressBar.max = evt.total;
-      progressBar.value = evt.loaded;
-      percentageDiv.innerHTML = "progress: " + Math.round((evt.loaded / evt.total) * 100) + "%";
+        progressBar.max = evt.total;
+        progressBar.value = evt.loaded;
+        percentageDiv.innerHTML = "progress: " + Math.round((evt.loaded / evt.total) * 100) + "%";
     }
 
     var time = document.getElementById("time");
@@ -348,63 +129,70 @@
     var speed = perload / pertime;
     var bspeed = speed;
     var units = "b/s";
+    
     if (speed / 1024 > 1) {
-      speed = speed / 1024;
-      units = "k/s";
+        speed = speed / 1024;
+        units = "k/s";
     }
     if (speed / 1024 > 1) {
-      speed = speed / 1024;
-      units = "M/s";
+        speed = speed / 1024;
+        units = "M/s";
     }
+    
     speed = speed.toFixed(1);
     var resttime = ((evt.total - evt.loaded) / bspeed).toFixed(1);
     time.innerHTML = "Speed: " + speed + units + ", Remaining time: " + resttime + "s";
-    if (bspeed == 0)
-      time.innerHTML = "Upload cancelled!";
-    message.style.color = "#ED5126";
-  }
-
-  //上传成功响应
-  function uploadComplete(x) {
-    if (xhr.status == 200) {
-      var counter = 0;
-      Running.innerHTML = "";
-      message.innerHTML = "File uploaded successfully<br>" + xhr.responseText + "<br>Waiting for the device to restart<br>waiting";
-      message.style.color = "#2C9678";
-      timer = setInterval(function () {
-        fetch(`${deviceBaseUrl}/Now`).then((response) => {  // 修改这里
-          if (response.status == 200) {
-            location.assign(location.href);
-          }
-        });
-        if (counter >= 50) {
-          clearInterval(timer);
-        } else {
-          message.innerHTML = message.innerHTML + " .";
-        }
-        counter = counter + 1;
-      }, 1000);
-    } else {
-      var errorMess = "status: " + xhr.status + "<br>responseText: " + xhr.responseText;
-      message.innerHTML = errorMess;
-      message.style.color = "#ED5126";
+    
+    if (bspeed == 0) {
+        time.innerHTML = "Upload cancelled!";
+        message.style.color = "#ED5126";
     }
-  }
+}
 
-  //上传失败响应
-  function uploadFailed(x) {
-    message.innerHTML = "Upload error!";
+//上传成功响应
+function uploadComplete() {
+    if (xhr.status == 200) {
+        var counter = 0;
+        Running.innerHTML = "";
+        message.innerHTML = "File uploaded successfully<br>" + xhr.responseText + "<br>Waiting for the device to restart<br>waiting";
+        message.style.color = "#2C9678";
+        
+        var timer = setInterval(function () {
+            fetch(getDeviceUrl('/Now')).then((response) => {
+                if (response.status == 200) {
+                    clearInterval(timer);
+                    location.reload();
+                }
+            }).catch(error => {
+                console.error("Status check failed:", error);
+            });
+            
+            if (counter >= 50) {
+                clearInterval(timer);
+                message.innerHTML += "<br>Timeout: Device may have restarted";
+            } else {
+                message.innerHTML = message.innerHTML + " .";
+            }
+            counter = counter + 1;
+        }, 1000);
+    } else {
+        var errorMess = "status: " + xhr.status + "<br>responseText: " + xhr.responseText;
+        message.innerHTML = errorMess;
+        message.style.color = "#ED5126";
+    }
+}
+
+//上传失败响应
+function uploadFailed() {
+    message.innerHTML = "Upload error! Check device connection.";
     message.style.color = "#ED5126";
-  }
+}
 
-  //终止上传
-  function StopUpload() {
-    xhr.abort();
-    message.innerHTML = "Upload terminated!";
-    message.style.color = "#ED5126";
-  }
-</script>
-
-</html>
-
-
+//终止上传
+function StopUpload() {
+    if (xhr) {
+        xhr.abort();
+        message.innerHTML = "Upload terminated!";
+        message.style.color = "#ED5126";
+    }
+}
