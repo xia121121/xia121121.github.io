@@ -249,90 +249,103 @@
   </div>
 </body>
 <script>
-  var Running = document.getElementById("Running"); //访问 HTML 元素
+  // 获取URL参数中的设备IP和端口
+  function getUrlParameter(name) {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get(name);
+  }
+
+  // 获取设备IP和端口
+  const deviceIp = getUrlParameter('device_ip') || '10.10.10.1';  // 使用您的实际设备IP
+  const devicePort = getUrlParameter('device_port') || '88';
+  const deviceBaseUrl = `http://${deviceIp}:${devicePort}`;
+
+  var Running = document.getElementById("Running");
+  
   //页面加载完毕后立刻执行的操作
   window.onload = function () {
-    console.log("window.onload");
-    console.log("ip地址: " + window.location.hostname);
-    fetch("/Now").then((response) => {    //基本的fetch请求 http请求
+    console.log("Device base URL:", deviceBaseUrl);
+    fetch(`${deviceBaseUrl}/Now`).then((response) => {    // 修改这里
       console.log("fetch/Now");
-      if (response.status == 200) {       //获取http请求状态 200 请求成功
-        response.json().then(function (data) {  //json数据
+      if (response.status == 200) {
+        response.json().then(function (data) {
           console.log("response.json");
           Running.innerHTML =
             "Type: " +
-            data.OTAsubtype +             //解析json数据
+            data.OTAsubtype +
             "<br>Offset: 0x" +
-            data.address.toString(16) +   //解析json数据转换成字符串
+            data.address.toString(16) +
             "<br>Ver: " +
-            data.version +                //解析json数据
+            data.version +
             "<br>Time: " +
-            data.date +                   //解析json数据
+            data.date +
             " " +
-            data.time;                    //解析json数据
+            data.time;
         });
-      } else {                            //http请求失败
+      } else {
         Running.innerHTML = "status: " + response.status;
         console.log("response.status");
       }
     });
   };
+
   //选择文件
   function setpath() {
-    var default_path = document.getElementById("newfile").files[0].name;//获取文件名
-    document.getElementById("fileButton").innerHTML = default_path;     //显示选中的文件名
+    var default_path = document.getElementById("newfile").files[0].name;
+    document.getElementById("fileButton").innerHTML = default_path;
   }
 
   var xhr;
   var ot;
   var oloaded;
+  
   //上传文件方法
   function upload() {
-    var fileInput = document.getElementById("newfile").files; // 获取文件对象
-    var message = document.getElementById("message");         // 要设置的消息
-    message.innerHTML = "";                                   // 初始化显示消息
-    if (fileInput.length <= 0) {                              // 文件长度小于的等于0的时候
-      message.innerHTML = "Unselected file!";                 // 没有选择文件
-      message.style.color = "#ED5126";                        // 设置样式字体颜色
-    } else if (fileInput[0].size > 3584 * 1024) {             // 文件超过最大限制的时候
-      message.innerHTML = "The file size must be less than 1000KB!"; // 提示超过限制
-      message.style.color = "#ED5126";                        // 设置样式字体颜色
+    var fileInput = document.getElementById("newfile").files;
+    var message = document.getElementById("message");
+    message.innerHTML = "";
+    if (fileInput.length <= 0) {
+      message.innerHTML = "Unselected file!";
+      message.style.color = "#ED5126";
+    } else if (fileInput[0].size > 3584 * 1024) {
+      message.innerHTML = "The file size must be less than 1000KB!";
+      message.style.color = "#ED5126";
     } else {
-      var fileObj = fileInput[0];                             // js 获取文件对象
-      xhr = new XMLHttpRequest();                             // XMLHttpRequest 对象
-      xhr.open("post", "/upload", true);                      // post方式，/upload 为请求url，true 该参数规定请求是否异步处理。
-      xhr.onload = uploadComplete;                            // 请求完成
-      xhr.onerror = uploadFailed;                             // 请求失败
-      xhr.upload.onprogress = progressFunction;               //【上传进度调用方法实现】
-      xhr.upload.onloadstart = function () {                  // 开始上传的时候执行方法
-        ot = new Date().getTime();                            // 设置上传开始时间
-        oloaded = 0;                                          // 设置上传开始时，以上传的文件大小为0
+      var fileObj = fileInput[0];
+      xhr = new XMLHttpRequest();
+      xhr.open("post", `${deviceBaseUrl}/upload`, true);  // 修改这里
+      xhr.onload = uploadComplete;
+      xhr.onerror = uploadFailed;
+      xhr.upload.onprogress = progressFunction;
+      xhr.upload.onloadstart = function () {
+        ot = new Date().getTime();
+        oloaded = 0;
       };
-      xhr.send(fileObj);                                      // 开始上传，发送form数据
+      xhr.send(fileObj);
     }
   }
-  //上传进度实现方法，上传过程中会频繁调用该方法
+
+  //上传进度实现方法
   function progressFunction(evt) {
-    var progressBar = document.getElementById("prgp");        // 获取progressBar 进度条对象
-    var percentageDiv = document.getElementById("prg");       // 进度显示
-    if (evt.lengthComputable) {                               // event.lengthComputable不为真，则event.total等于0
-      progressBar.max = evt.total;                            // event.total是需要传输的总字节
-      progressBar.value = evt.loaded;                         // event.loaded是已经传输的字节
-      percentageDiv.innerHTML = "progress: " + Math.round((evt.loaded / evt.total) * 100) + "%"; // Math.round 四舍五入
+    var progressBar = document.getElementById("prgp");
+    var percentageDiv = document.getElementById("prg");
+    if (evt.lengthComputable) {
+      progressBar.max = evt.total;
+      progressBar.value = evt.loaded;
+      percentageDiv.innerHTML = "progress: " + Math.round((evt.loaded / evt.total) * 100) + "%";
     }
 
-    var time = document.getElementById("time");               // 获取time对象
-    var nt = new Date().getTime();                            // 获取当前时间
-    var pertime = (nt - ot) / 1000;                           // 计算出上次调用该方法时到现在的时间差，单位为s
-    ot = new Date().getTime();                                // 重新赋值时间，用于下次计算
+    var time = document.getElementById("time");
+    var nt = new Date().getTime();
+    var pertime = (nt - ot) / 1000;
+    ot = new Date().getTime();
 
-    var perload = evt.loaded - oloaded;                       // 计算该分段上传的文件大小，单位b
-    oloaded = evt.loaded;                                     // 重新赋值已上传文件大小，用以下次计算
+    var perload = evt.loaded - oloaded;
+    oloaded = evt.loaded;
 
-    //上传速度计算
-    var speed = perload / pertime;  //单位b/s
+    var speed = perload / pertime;
     var bspeed = speed;
-    var units = "b/s";              //单位名称
+    var units = "b/s";
     if (speed / 1024 > 1) {
       speed = speed / 1024;
       units = "k/s";
@@ -341,46 +354,47 @@
       speed = speed / 1024;
       units = "M/s";
     }
-    speed = speed.toFixed(1);       //toFixed 四舍五入为指定小数位数的数字 eg: number = 13.37  number.toFixed(1) = 13.4
-    var resttime = ((evt.total - evt.loaded) / bspeed).toFixed(1);                      // 剩余时间
-    time.innerHTML = "Speed: " + speed + units + ", Remaining time: " + resttime + "s"; // 显示时间速度
+    speed = speed.toFixed(1);
+    var resttime = ((evt.total - evt.loaded) / bspeed).toFixed(1);
+    time.innerHTML = "Speed: " + speed + units + ", Remaining time: " + resttime + "s";
     if (bspeed == 0)
       time.innerHTML = "Upload cancelled!";
     message.style.color = "#ED5126";
   }
+
   //上传成功响应
   function uploadComplete(x) {
-    //服务断接收完文件返回的结果
-    if (xhr.status == 200) {                //post请求成功
+    if (xhr.status == 200) {
       var counter = 0;
-      Running.innerHTML = "";               //初始化显示区
-      message.innerHTML = "File uploaded successfully<br>" + xhr.responseText + "<br>Waiting for the device to restart<br>waiting"; //显示请求成功 <br> 换行
-      message.style.color = "#2C9678";      //设置颜色
-      timer = setInterval(function () {             //定时函数，页面会每隔1000毫秒正常执行一次 1S请求一次 Now
-        fetch("/Now").then((response) => {
-          if (response.status == 200) {     //请求成功
-            location.assign(location.href); //获取或者设置整个URL 跳转网页 重定向页面
-            //location.replace();
+      Running.innerHTML = "";
+      message.innerHTML = "File uploaded successfully<br>" + xhr.responseText + "<br>Waiting for the device to restart<br>waiting";
+      message.style.color = "#2C9678";
+      timer = setInterval(function () {
+        fetch(`${deviceBaseUrl}/Now`).then((response) => {  // 修改这里
+          if (response.status == 200) {
+            location.assign(location.href);
           }
         });
         if (counter >= 50) {
           clearInterval(timer);
         } else {
-          message.innerHTML = message.innerHTML + " ."; //定时器回调显示 ........
+          message.innerHTML = message.innerHTML + " .";
         }
         counter = counter + 1;
       }, 1000);
-    } else {                            //上传失败
-      var errorMess = "status: " + xhr.status + "<br>responseText: " + xhr.responseText; //获取错误的请求
-      message.innerHTML = errorMess;    //显示错误内容
-      message.style.color = "#ED5126";  //设置颜色
+    } else {
+      var errorMess = "status: " + xhr.status + "<br>responseText: " + xhr.responseText;
+      message.innerHTML = errorMess;
+      message.style.color = "#ED5126";
     }
   }
+
   //上传失败响应
   function uploadFailed(x) {
     message.innerHTML = "Upload error!";
     message.style.color = "#ED5126";
   }
+
   //终止上传
   function StopUpload() {
     xhr.abort();
@@ -390,5 +404,3 @@
 </script>
 
 </html>
-
-
